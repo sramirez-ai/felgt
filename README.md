@@ -1,3 +1,3 @@
 # felgt
 
-Uso descrito en index.html
+Uso descrito en index.php
