@@ -315,9 +315,9 @@ class FelGT {
 
     public function setTesting($test = true) {
         if ($test) {
-            $this->usuario = "DEMO_FEL";
-            $this->llave = "E5DC9FFBA5F3653E27DF2FC1DCAC824D";
-            $this->identificador = "b21b063dec8367a4d15f4fa6dc0975bc";
+            $this->usuario = "DEMOPRUEBASALEXIUS";
+            $this->llave = "D28556291ED191FBA6907845195F7E07";
+            $this->identificador = "a6f6bf86bb851757302d6f7774da117d";
             $this->credencialesEstablecidos = true;
             $this->doLog("Apuntando a instancia de TEST", self::LOG_LEVEL_DEBUG);
         } else {
@@ -437,11 +437,11 @@ class FelGT {
         if ($this->isEMAILValid($correo)) {
             $this->correo_receptor = $correo;
             $this->nombre_receptor = $nombre;
+            $this->idReceptor = $idReceptor;
             $this->datosReceptorEstablecidos = true;
             if (!$es_cui && !$this->isNITValid($idReceptor)) {
                 $this->doLog("El id del receptor ha sido marcado como NIT pero no es valido", self::LOG_LEVEL_ERROR);
             } else {
-                $this->idReceptor = $idReceptor;
                 $this->doLog("Datos del receptor Establecidos", self::LOG_LEVEL_DEBUG);
             }
         } else {
@@ -570,7 +570,7 @@ class FelGT {
                 "llave" => $this->identificador,
                 "archivo" => base64_encode($xml),
                 "codigo" =>$codigo_unico,
-                "alias" =>"DEMO_FEL",
+                "alias" =>"DEMOPRUEBASALEXIUS",
                 "es_anulacion" =>($anulacion?"Y":"N")
             ]);
             $this->bodyFirma=$body;
@@ -598,11 +598,17 @@ class FelGT {
     
     private function generateXml() {
 
-        $xml = '<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.1.0">
+        /*$xml = '<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.1.0">
+  <dte:SAT ClaseDocumento="dte">
+    <dte:DTE ID="DatosCertificados">
+      <dte:DatosEmision ID="DatosEmision">';*/
+
+        $xml = '<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.2.0">
   <dte:SAT ClaseDocumento="dte">
     <dte:DTE ID="DatosCertificados">
       <dte:DatosEmision ID="DatosEmision">';
-
+        
+        
         //Datos Generales
         $xml .= "<dte:DatosGenerales Tipo=\"" . $this->tipo_documento . "\" " . ($this->es_exportacion ? "Exp=\"SI\"" : "") . " "
                 . "FechaHoraEmision=\"" . $this->fechaHoraEmision . "\" CodigoMoneda=\"" . $this->codigoMoneda . "\""
@@ -838,19 +844,19 @@ class FelGT {
      * Getters y Setters
      */
     
-    function getUsuario(): String {
+    function getUsuario() {
         return $this->usuario;
     }
 
-    function getLlave(): String {
+    function getLlave() {
         return $this->llave;
     }
 
-    function getIdentificador(): String {
+    function getIdentificador() {
         return $this->identificador;
     }
 
-    static function getLog_level(): Array {
+    static function getLog_level() {
         return self::$log_level;
     }
 
@@ -862,7 +868,7 @@ class FelGT {
         return self::$tipo_impuesto;
     }
 
-    static function getMonedas(): array {
+    static function getMonedas() {
         return self::$monedas;
     }
 
@@ -870,7 +876,7 @@ class FelGT {
         return self::$paises;
     }
 
-    static function getTipo_afiliacion_iva(): array {
+    static function getTipo_afiliacion_iva() {
         return self::$tipo_afiliacion_iva;
     }
 
@@ -886,7 +892,7 @@ class FelGT {
         return $this->fechaHoraEmision;
     }
 
-    function getEs_exportacion(): bool {
+    function getEs_exportacion() {
         return $this->es_exportacion;
     }
 
@@ -1050,215 +1056,215 @@ class FelGT {
         return $this->uuid;
     }
 
-    function setUsuario(String $usuario): void {
+    function setUsuario(String $usuario) {
         $this->usuario = $usuario;
     }
 
-    function setLlave(String $llave): void {
+    function setLlave(String $llave) {
         $this->llave = $llave;
     }
 
-    function setIdentificador(String $identificador): void {
+    function setIdentificador(String $identificador) {
         $this->identificador = $identificador;
     }
 
-    static function setLog_level(Array $log_level): void {
+    static function setLog_level(Array $log_level) {
         self::$log_level = $log_level;
     }
 
-    static function setTipos_dte($tipos_dte): void {
+    static function setTipos_dte($tipos_dte) {
         self::$tipos_dte = $tipos_dte;
     }
 
-    static function setTipo_impuesto($tipo_impuesto): void {
+    static function setTipo_impuesto($tipo_impuesto) {
         self::$tipo_impuesto = $tipo_impuesto;
     }
 
-    static function setMonedas(array $monedas): void {
+    static function setMonedas(array $monedas) {
         self::$monedas = $monedas;
     }
 
-    static function setPaises($paises): void {
+    static function setPaises($paises) {
         self::$paises = $paises;
     }
 
-    static function setTipo_afiliacion_iva(array $tipo_afiliacion_iva): void {
+    static function setTipo_afiliacion_iva(array $tipo_afiliacion_iva) {
         self::$tipo_afiliacion_iva = $tipo_afiliacion_iva;
     }
 
-    function setCredencialesEstablecidos($credencialesEstablecidos): void {
+    function setCredencialesEstablecidos($credencialesEstablecidos) {
         $this->credencialesEstablecidos = $credencialesEstablecidos;
     }
 
-    function setTipo_documento($tipo_documento): void {
+    function setTipo_documento($tipo_documento) {
         $this->tipo_documento = $tipo_documento;
     }
 
-    function setFechaHoraEmision($fechaHoraEmision): void {
+    function setFechaHoraEmision($fechaHoraEmision) {
         $this->fechaHoraEmision = $fechaHoraEmision;
     }
 
-    function setEs_exportacion(bool $es_exportacion): void {
+    function setEs_exportacion(bool $es_exportacion) {
         $this->es_exportacion = $es_exportacion;
     }
 
-    function setCodigoMoneda($codigoMoneda): void {
+    function setCodigoMoneda($codigoMoneda) {
         $this->codigoMoneda = $codigoMoneda;
     }
 
-    function setTipoPersoneria($tipoPersoneria): void {
+    function setTipoPersoneria($tipoPersoneria) {
         $this->tipoPersoneria = $tipoPersoneria;
     }
 
-    function setDatosGeneralesEstablecidos($datosGeneralesEstablecidos): void {
+    function setDatosGeneralesEstablecidos($datosGeneralesEstablecidos) {
         $this->datosGeneralesEstablecidos = $datosGeneralesEstablecidos;
     }
 
-    function setNit_emisor($nit_emisor): void {
+    function setNit_emisor($nit_emisor) {
         $this->nit_emisor = $nit_emisor;
     }
 
-    function setNombre_emisor($nombre_emisor): void {
+    function setNombre_emisor($nombre_emisor) {
         $this->nombre_emisor = $nombre_emisor;
     }
 
-    function setCodigo_establecimiento($codigo_establecimiento): void {
+    function setCodigo_establecimiento($codigo_establecimiento) {
         $this->codigo_establecimiento = $codigo_establecimiento;
     }
 
-    function setNombre_comercial($nombre_comercial): void {
+    function setNombre_comercial($nombre_comercial) {
         $this->nombre_comercial = $nombre_comercial;
     }
 
-    function setCorreo_emisor($correo_emisor): void {
+    function setCorreo_emisor($correo_emisor) {
         $this->correo_emisor = $correo_emisor;
     }
 
-    function setAfiliacion_iva_emisor($afiliacion_iva_emisor): void {
+    function setAfiliacion_iva_emisor($afiliacion_iva_emisor) {
         $this->afiliacion_iva_emisor = $afiliacion_iva_emisor;
     }
 
-    function setDatosEmisorEstablecidos($datosEmisorEstablecidos): void {
+    function setDatosEmisorEstablecidos($datosEmisorEstablecidos) {
         $this->datosEmisorEstablecidos = $datosEmisorEstablecidos;
     }
 
-    function setDireccion_emisor($direccion_emisor): void {
+    function setDireccion_emisor($direccion_emisor) {
         $this->direccion_emisor = $direccion_emisor;
     }
 
-    function setCodigo_postal_emisor($codigo_postal_emisor): void {
+    function setCodigo_postal_emisor($codigo_postal_emisor) {
         $this->codigo_postal_emisor = $codigo_postal_emisor;
     }
 
-    function setMunicipio_emisor($municipio_emisor): void {
+    function setMunicipio_emisor($municipio_emisor) {
         $this->municipio_emisor = $municipio_emisor;
     }
 
-    function setDepartamento_emisor($departamento_emisor): void {
+    function setDepartamento_emisor($departamento_emisor) {
         $this->departamento_emisor = $departamento_emisor;
     }
 
-    function setPais_emisor($pais_emisor): void {
+    function setPais_emisor($pais_emisor) {
         $this->pais_emisor = $pais_emisor;
     }
 
-    function setDireccionEmisorEstablecida($direccionEmisorEstablecida): void {
+    function setDireccionEmisorEstablecida($direccionEmisorEstablecida) {
         $this->direccionEmisorEstablecida = $direccionEmisorEstablecida;
     }
 
-    function setIdReceptor($idReceptor): void {
+    function setIdReceptor($idReceptor) {
         $this->idReceptor = $idReceptor;
     }
 
-    function setNombre_receptor($nombre_receptor): void {
+    function setNombre_receptor($nombre_receptor) {
         $this->nombre_receptor = $nombre_receptor;
     }
 
-    function setCorreo_receptor($correo_receptor): void {
+    function setCorreo_receptor($correo_receptor) {
         $this->correo_receptor = $correo_receptor;
     }
 
-    function setEs_cui($es_cui): void {
+    function setEs_cui($es_cui) {
         $this->es_cui = $es_cui;
     }
 
-    function setDatosReceptorEstablecidos($datosReceptorEstablecidos): void {
+    function setDatosReceptorEstablecidos($datosReceptorEstablecidos) {
         $this->datosReceptorEstablecidos = $datosReceptorEstablecidos;
     }
 
-    function setDireccion_receptor($direccion_receptor): void {
+    function setDireccion_receptor($direccion_receptor) {
         $this->direccion_receptor = $direccion_receptor;
     }
 
-    function setCodigo_postal_receptor($codigo_postal_receptor): void {
+    function setCodigo_postal_receptor($codigo_postal_receptor) {
         $this->codigo_postal_receptor = $codigo_postal_receptor;
     }
 
-    function setMunicipio_receptor($municipio_receptor): void {
+    function setMunicipio_receptor($municipio_receptor) {
         $this->municipio_receptor = $municipio_receptor;
     }
 
-    function setDepartamento_receptor($departamento_receptor): void {
+    function setDepartamento_receptor($departamento_receptor) {
         $this->departamento_receptor = $departamento_receptor;
     }
 
-    function setPais_receptor($pais_receptor): void {
+    function setPais_receptor($pais_receptor) {
         $this->pais_receptor = $pais_receptor;
     }
 
-    function setDireccionReceptorEstablecida($direccionReceptorEstablecida): void {
+    function setDireccionReceptorEstablecida($direccionReceptorEstablecida) {
         $this->direccionReceptorEstablecida = $direccionReceptorEstablecida;
     }
 
-    function setItems($items): void {
+    function setItems($items) {
         $this->items = $items;
     }
 
-    function setTaxes($taxes): void {
+    function setTaxes($taxes) {
         $this->taxes = $taxes;
     }
 
-    function setXml($xml): void {
+    function setXml($xml) {
         $this->xml = $xml;
     }
 
-    function setXmlFirmado($xmlFirmado): void {
+    function setXmlFirmado($xmlFirmado) {
         $this->xmlFirmado = $xmlFirmado;
     }
 
-    function setXmlCertificado($xmlCertificado): void {
+    function setXmlCertificado($xmlCertificado) {
         $this->xmlCertificado = $xmlCertificado;
     }
 
-    function setXmlFirmadoBase64($xmlFirmadoBase64): void {
+    function setXmlFirmadoBase64($xmlFirmadoBase64) {
         $this->xmlFirmadoBase64 = $xmlFirmadoBase64;
     }
 
-    function setBody($body): void {
+    function setBody($body) {
         $this->body = $body;
     }
 
-    function setBodyFirma($bodyFirma): void {
+    function setBodyFirma($bodyFirma) {
         $this->bodyFirma = $bodyFirma;
     }
 
-    function setJsonFirma($jsonFirma): void {
+    function setJsonFirma($jsonFirma) {
         $this->jsonFirma = $jsonFirma;
     }
 
-    function setJsonCertificacion($jsonCertificacion): void {
+    function setJsonCertificacion($jsonCertificacion) {
         $this->jsonCertificacion = $jsonCertificacion;
     }
 
-    function setSerie($serie): void {
+    function setSerie($serie) {
         $this->serie = $serie;
     }
 
-    function setNumero($numero): void {
+    function setNumero($numero) {
         $this->numero = $numero;
     }
 
-    function setUuid($uuid): void {
+    function setUuid($uuid) {
         $this->uuid = $uuid;
     }
 }
