@@ -7,14 +7,17 @@ include_once 'FelGT.php';
 include_once 'prettyPrint.php';
 
 echo "<h1>Testing FEL 1.0</h1>";
+/**
+ * SE AÑADE AL CONSTRUCTOR UN TERCER PARAMETRO PARA INDICAR EL PROVEEDOR DEL SERVICIO DE FIRMA
+ */
 //PASO 1: Creacion de objeto
-$fel=new alexius\felgt\FelGT("./","",false);
+$fel=new alexius\felgt\FelGT("./","", \alexius\felgt\FelGT::PROVIDER_FORCON,false);
 $fel->setTesting();
 //PASO 2: Se colocan datos generales de la factura
-$fel->setDatosGenerales(\alexius\felgt\FelGT::DOCUMENTO_FACTURA, false, '2020-08-24T00:00:00-06:00',"GTQ");
+$fel->setDatosGenerales(\alexius\felgt\FelGT::DOCUMENTO_FACTURA, false, '2020-11-18T00:00:00-06:00',"GTQ");
 
 //PASO 3: Datos de emisor
-$fel->setDatosEmisor("9200000053K", "DEMOPRUEBASALEXIUS", "1", "DEMOPRUEBASALEXIUS", 
+$fel->setDatosEmisor("85741191", "PROLEASE, SOCIEDAD ANONIMA", "1", "PROLEASE", 
         "sramirez@alexius.net", "GEN");
 $fel->setDireccionEmisor("Ciudad 00-00 Ciudad Zona: 0, Guatemala, Guatemala", 
         "0", "Guatemala", "Guatemala", "GT");
@@ -77,16 +80,16 @@ echo "<strong>Numero:".$fel->numero."</strong><br>";
     <tr><td colspan="4" style="font-size: 1.2em;font-weight: bold;text-align: center">FIRMA RECIBIDO</td></tr>
     <tr>
         <td><textarea rows="20"><?php echo $fel->xmlFirmado; ?></textarea></td>
-        <td><textarea rows="20"><?php echo prettyPrint($fel->jsonFirma); ?></textarea></td>
+        <td><textarea rows="20"><?php echo $fel->jsonFirma; ?></textarea></td>
     </tr>
     <tr><td colspan="4" style="font-size: 1.2em;font-weight: bold;text-align: center">CERTIFICACION ENVIADO</td></tr>
     <tr>
         <td><textarea rows="20"><?php echo $fel->xmlFirmado; ?></textarea></td>
-        <td><textarea rows="20"><?php echo prettyPrint($fel->body); ?></textarea></td>
+        <td><textarea rows="20"><?php echo $fel->body; ?></textarea></td>
     </tr>
     <tr><td colspan="4" style="font-size: 1.2em;font-weight: bold;text-align: center">CERTIFICACION RECIBIDO</td></tr>
     <tr>
-        <td><textarea rows="20"><?php echo $fel->xmlFirmado; ?></textarea></td>
-        <td><textarea rows="20"><?php echo prettyPrint($fel->jsonCertificacion); ?></textarea></td>
+        <td><textarea rows="20"><?php echo $fel->xmlCertificado; ?></textarea></td>
+        <td><textarea rows="20"><?php echo $fel->jsonCertificacion; ?></textarea></td>
     </tr>
 </table>

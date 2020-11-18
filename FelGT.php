@@ -79,11 +79,18 @@ class FelGT {
     protected static $log_level = [
         self::LOG_LEVEL_ERROR, self::LOG_LEVEL_WARNING, self::LOG_LEVEL_DEBUG
     ];
+    
+    //PROVIDERS
+    const PROVIDER_INFILE=0;
+    const PROVIDER_FORCON=1;
+    
 
     //URL
-    const URL_CERTIFICACION = 'https://certificador.feel.com.gt/fel/certificacion/v2/dte/';
-    const URL_ANULACION = 'https://certificador.feel.com.gt/fel/anulacion/v2/dte/';
-    const URL_FIRMA = 'https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml';
+    const URL_CERTIFICACION=['https://certificador.feel.com.gt/fel/certificacion/v2/dte/','http://pruebasfel.eforcon.com/feldev/WSForconFel.asmx'];
+    const URL_ANULACION=['https://certificador.feel.com.gt/fel/anulacion/v2/dte/','http://pruebasfel.eforcon.com/feldev/WSForconFel.asmx'];
+    const URL_FIRMA=['https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml','http://pruebasfel.eforcon.com/feldev/WSForconFel.asmx'];
+    
+        
     const CONTENT_TYPE_JSON = 'application/json';
     const DATE_FORMAT = '%y-%m-%dT%';
     const NIT_REGEX = "/(([1-9])+([0-9])*([0-9]|K))$/";
@@ -186,6 +193,9 @@ class FelGT {
         "GEN", "EXE", "PEQ",
         "PEE", "AGR", "AGE"
     ];
+    
+    private $provider=1;
+    
     private $credencialesEstablecidos = false;
 
     /*     * *****************************
@@ -278,15 +288,18 @@ class FelGT {
      * @param string $xml_path Indica la ruta donde sera almacenado el archivo 
      * xml certificado
      * @param string $file_name El nombre del archivo a generar
+     * @param int $provider Proveedor de Certificacion a utilizar 0=INFILE, 1=FORCON
      * @param bool $exceptions Establece si la clase envia las excepciones
      */
-    public function __construct($xml_path, $file_name, $exceptions = null) {
+    public function __construct($xml_path, $file_name, $provider,$exceptions = null) {
         $this->path = $xml_path;
         $this->file_name = $file_name;
+        $this->provider=$provider;
         if (null !== $exceptions) {
             $this->exceptions = (bool) $exceptions;
         }
         $this->doLog("Constructor de la clase", self::LOG_LEVEL_DEBUG);
+        
     }
 
     /**
@@ -315,11 +328,20 @@ class FelGT {
 
     public function setTesting($test = true) {
         if ($test) {
-            $this->usuario = "DEMOPRUEBASALEXIUS";
-            $this->llave = "D28556291ED191FBA6907845195F7E07";
-            $this->identificador = "a6f6bf86bb851757302d6f7774da117d";
-            $this->credencialesEstablecidos = true;
-            $this->doLog("Apuntando a instancia de TEST", self::LOG_LEVEL_DEBUG);
+            if($this->provider==self::PROVIDER_INFILE){
+                $this->usuario = "DEMOPRUEBASALEXIUS";
+                $this->llave = "D28556291ED191FBA6907845195F7E07";
+                $this->identificador = "a6f6bf86bb851757302d6f7774da117d";
+                $this->credencialesEstablecidos = true;
+                $this->doLog("Apuntando a instancia de TEST", self::LOG_LEVEL_DEBUG);
+            }else if($this->provider==self::PROVIDER_FORCON){
+                $this->usuario = "testadm-pl";
+                $this->llave = "P#Rl!zz@2020";
+                $this->identificador = "a6f6bf86bb851757302d6f7774da117d";
+                $this->credencialesEstablecidos = true;
+                $this->doLog("Apuntando a instancia de TEST", self::LOG_LEVEL_DEBUG);
+            }
+            
         } else {
             $this->doLog("Apuntando a instancia de PRODUCCION", self::LOG_LEVEL_DEBUG);
         }
@@ -525,6 +547,65 @@ class FelGT {
      * @param string $correoCopia Dirección de envío de correo en copia para el documento certificado (No habilitado actualmente por INFILE)
      */
     public function certificar($codigo_unico, $correoCopia) {
+        if($this->provider==self::PROVIDER_FORCON){
+            $this->certificar_forcon($codigo_unico, $correoCopia);
+        }else if($this->provider==self::PROVIDER_INFILE){
+            $this->certificar_infile($codigo_unico, $correoCopia);
+        }
+    }
+    
+    public function certificar_forcon($codigo_unico, $correoCopia) {
+        if ($this->validarCertificacion()) {
+            $this->generateXml();
+            
+            $body = 
+'<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Header/>
+  <soap:Body>
+    <EmitirDteOficialV2 xmlns="http://www.eforcon.com/webservice">
+      <sUsuario>'.$this->usuario.'</sUsuario>
+      <sClave>'.$this->llave.'</sClave>
+      <sXmlDte><![CDATA['.$this->xml.']]></sXmlDte>
+    </EmitirDteOficialV2>
+  </soap:Body>
+</soap:Envelope>';
+            $this->body = $body;
+
+            $this->logDebug("BODY: " . $body);
+            
+            
+            $ch = curl_init(self::URL_CERTIFICACION[$this->provider]);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:text/xml'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            $result = curl_exec($ch);
+            $this->jsonCertificacion=$result;
+            $start= strpos($result, "<EmitirDteOficialV2Result>");
+            $end=strpos($result, "</EmitirDteOficialV2Response>")-$start;
+            $txt= trim(substr($result, $start,$end));
+            $xml = simplexml_load_string('<?xml version="1.0" encoding="utf-8"?>'.$txt);
+
+            $resultado=$xml;
+            
+            
+            if($resultado->rwsResultado){
+                 $this->xmlCertificado=htmlspecialchars($resultado->rwsXMLCertificado);
+                $this->uuid=$resultado->rwsAutorizacionUUID;
+                $this->serie=$resultado->rwsSerieDTE;
+                $this->numero=$resultado->rwsNumeroDTE;
+                
+            }else{
+                $this->logError("Ocurrieron errores por favor verifique la propiedad jsonCertificacion para los detalles");
+            }
+            
+            
+        } else {
+            $this->logError("El documento actual no cumple la validacion previa realizada por la clase, por favor verifique el log");
+        }
+    }
+
+    
+    public function certificar_infile($codigo_unico, $correoCopia) {
         if ($this->validarCertificacion()) {
             $this->generateXml();
             $this->firmarXML($this->xml,$codigo_unico);
@@ -542,7 +623,7 @@ class FelGT {
             $this->logDebug("XMLFirmado: 
                 " . $this->xmlFirmado);
             
-            $ch = curl_init(self::URL_CERTIFICACION);
+            $ch = curl_init(self::URL_CERTIFICACION[$this->provider]);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json',"usuario:".$this->usuario,"llave:".$this->llave,"identificador:".$codigo_unico));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
@@ -566,33 +647,36 @@ class FelGT {
     }
 
     public function firmarXML($xml,$codigo_unico,$anulacion=false){
-            $body = json_encode([
-                "llave" => $this->identificador,
-                "archivo" => base64_encode($xml),
-                "codigo" =>$codigo_unico,
-                "alias" =>"DEMOPRUEBASALEXIUS",
-                "es_anulacion" =>($anulacion?"Y":"N")
-            ]);
-            $this->bodyFirma=$body;
-            $ch = curl_init(self::URL_FIRMA);
-            // Set the content type to application/json
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+            if($this->provider==self::PROVIDER_INFILE){
+                $body = json_encode([
+                    "llave" => $this->identificador,
+                    "archivo" => base64_encode($xml),
+                    "codigo" =>$codigo_unico,
+                    "alias" =>"DEMOPRUEBASALEXIUS",
+                    "es_anulacion" =>($anulacion?"Y":"N")
+                ]);
+                $this->bodyFirma=$body;
+                $ch = curl_init(self::URL_FIRMA);
+                // Set the content type to application/json
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
 
-            // Return response instead of outputting
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-            // Execute the POST request
-            $result = curl_exec($ch);
-            $this->jsonFirma=$result;
-            $json= json_decode($result,true);
-            $this->logDebug("Resultado de firma: ".$result);
-            if($json["resultado"]){
-                $this->xmlFirmadoBase64= $json["archivo"];
-                $this->xmlFirmado=base64_decode($json["archivo"]);
-            }else{
-                $this->xmlFirmado=false;
-                $this->xmlFirmadoBase64=false;
+                // Return response instead of outputting
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+                // Execute the POST request
+                $result = curl_exec($ch);
+                $this->jsonFirma=$result;
+                $json= json_decode($result,true);
+                $this->logDebug("Resultado de firma: ".$result);
+                if($json["resultado"]){
+                    $this->xmlFirmadoBase64= $json["archivo"];
+                    $this->xmlFirmado=base64_decode($json["archivo"]);
+                }else{
+                    $this->xmlFirmado=false;
+                    $this->xmlFirmadoBase64=false;
+                }
             }
+            
             
     }
     
@@ -603,7 +687,10 @@ class FelGT {
     <dte:DTE ID="DatosCertificados">
       <dte:DatosEmision ID="DatosEmision">';*/
 
-        $xml = '<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.2.0">
+        $xml = '<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+            xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+            Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.2.0 GT_Documento-0.2.0.xsd">
   <dte:SAT ClaseDocumento="dte">
     <dte:DTE ID="DatosCertificados">
       <dte:DatosEmision ID="DatosEmision">';
@@ -709,7 +796,9 @@ class FelGT {
         $dom->loadXML($xml);
         $dom->formatOutput = TRUE;
         $doc=$dom->saveXML();
-        $doc= str_replace("</dte:GTDocumento>", "", $doc);
+        if($this->provider==self::PROVIDER_INFILE){
+            $doc= str_replace("</dte:GTDocumento>", "", $doc);
+        }
         $this->xml = $doc;
         $this->base64xml = base64_encode($this->xml);
     }
